@@ -1,9 +1,8 @@
+use byteorder::{BigEndian, ByteOrder};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
-use byteorder::{ByteOrder, BigEndian};
 
 fn main() {
-    
     let listener = TcpListener::bind("localhost:4444").unwrap();
 
     for stream in listener.incoming() {
@@ -12,13 +11,12 @@ fn main() {
 }
 
 fn handle(mut stream: TcpStream) {
-
     // read tag
     let mut tag_buf = [0; 1];
     stream.read_exact(&mut tag_buf).unwrap();
     if tag_buf[0] != b"\x00"[0] && tag_buf.len() != 1 {
         println!("unknown tag");
-        return
+        return;
     }
 
     // read len
