@@ -26,5 +26,6 @@ fn main() {
     payload.extend_from_slice(&len_buf);
     payload.extend_from_slice(&data_bytes);
 
+    // write to stream
     stream.write(&payload).unwrap();
 }
