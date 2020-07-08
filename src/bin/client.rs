@@ -1,31 +1,31 @@
-use byteorder::{BigEndian, ByteOrder};
+use genproto::{form_get, form_put};
 use std::io::prelude::*;
 use std::net::TcpStream;
 
-const TAG: &[u8; 1] = b"\x00";
-
 fn main() {
+    get("hello_world");
+}
+
+fn get(key: &str) -> Option<String> {
+    // form get
+    let get_data = form_get(key);
+
     // connect to server
     let mut stream = TcpStream::connect("localhost:4444").unwrap();
 
-    // generate some data
-    let data = String::from("hello world");
-    let data_bytes = data.as_bytes();
+    // write get request
+    stream.write(&get_data).unwrap();
 
-    // get len of data
-    let len = data_bytes.len();
-    let len_u32 = len as u32;
-    let mut len_buf = [0; 4];
+    None
+}
 
-    // serialize len
-    BigEndian::write_u32(&mut len_buf, len_u32);
+fn put(key: &str, value: &str) {
+    // form put
+    let put_data = form_put(key, value);
 
-    // form payload
-    let mut payload: Vec<u8> = Vec::new();
-    payload.extend_from_slice(TAG);
-    payload.extend_from_slice(&len_buf);
-    payload.extend_from_slice(&data_bytes);
+    // connect to server
+    let mut stream = TcpStream::connect("localhost:4444").unwrap();
 
-    // write to stream
-    stream.write(&payload).unwrap();
+    // write payload
+    stream.write(&put_data).unwrap();
 }

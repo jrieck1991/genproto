@@ -1,16 +1,25 @@
 use byteorder::{BigEndian, ByteOrder};
+use genproto::{parse_request, Data};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
-
-const TAG: &[u8; 1] = b"\x00";
 
 fn main() {
     let listener = TcpListener::bind("localhost:4444").unwrap();
 
     for stream in listener.incoming() {
-        handle(stream.unwrap());
+        let stream = match stream {
+            Ok(stream) => stream,
+            Err(e) => {
+                println!("connection error: {}", e);
+                continue;
+            }
+        };
+        handle(stream);
     }
 }
+
+// protocol tag
+const TAG: &[u8; 1] = b"\x00";
 
 fn handle(mut stream: TcpStream) {
     loop {
@@ -54,7 +63,24 @@ fn handle(mut stream: TcpStream) {
             }
         }
 
-        // print read data
-        println!("{:?}", String::from_utf8(data_buf).unwrap());
+        // deserialize bytes into struct
+        let data = parse_request(data_buf);
+
+        // action on request
+        action(data);
+    }
+}
+
+// action on data received
+fn action(data: Data) {
+    match data.value {
+        Some(_val) => {
+            // put
+            println!("put received");
+        }
+        None => {
+            // get
+            println!("get received");
+        }
     }
 }
