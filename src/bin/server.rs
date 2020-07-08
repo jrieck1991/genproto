@@ -2,13 +2,18 @@ use byteorder::{BigEndian, ByteOrder};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 
-const TAG: &[u8; 1] = b"\x00";
-
 fn main() {
     let listener = TcpListener::bind("localhost:4444").unwrap();
 
     for stream in listener.incoming() {
-        handle(stream.unwrap());
+        match stream {
+            Ok(stream) => stream,
+            Err(e) => { 
+                println!("connection error: {}", e);
+                continue
+            }
+        }
+        handle(stream);
     }
 }
 
