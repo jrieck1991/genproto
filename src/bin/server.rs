@@ -1,7 +1,7 @@
 use byteorder::{BigEndian, ByteOrder};
+use genproto::{parse_request, Data};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
-use genproto::{Data, parse_request};
 
 fn main() {
     let listener = TcpListener::bind("localhost:4444").unwrap();
@@ -9,9 +9,9 @@ fn main() {
     for stream in listener.incoming() {
         let stream = match stream {
             Ok(stream) => stream,
-            Err(e) => { 
+            Err(e) => {
                 println!("connection error: {}", e);
-                continue
+                continue;
             }
         };
         handle(stream);
@@ -73,12 +73,11 @@ fn handle(mut stream: TcpStream) {
 
 // action on data received
 fn action(data: Data) {
-
     match data.value {
-        Some(val) => {
+        Some(_val) => {
             // put
             println!("put received");
-        },
+        }
         None => {
             // get
             println!("get received");
