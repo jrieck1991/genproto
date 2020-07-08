@@ -11,25 +11,48 @@ fn main() {
 }
 
 fn handle(mut stream: TcpStream) {
-    // read tag
-    let mut tag_buf = [0; 1];
-    stream.read_exact(&mut tag_buf).unwrap();
-    if tag_buf[0] != b"\x00"[0] && tag_buf.len() != 1 {
-        println!("unknown tag");
-        return;
+    loop {
+        // read tag
+        let mut tag_buf = [0; 1];
+        match stream.read_exact(&mut tag_buf) {
+            Ok(()) => (),
+            Err(e) => {
+                println!("error: {}", e);
+                return;
+            }
+        }
+
+        // verify tag
+        if tag_buf[0] != b"\x00"[0] && tag_buf.len() != 1 {
+            println!("unknown tag");
+            return;
+        }
+
+        // read len
+        let mut len_buf = [0; 4];
+        match stream.read_exact(&mut len_buf) {
+            Ok(()) => (),
+            Err(e) => {
+                println!("error: {}", e);
+                return;
+            }
+        }
+
+        // convert to u32
+        let len = BigEndian::read_u32(&len_buf);
+        let len_usize = len as usize;
+
+        // read data
+        let mut data_buf = vec![0; len_usize];
+        match stream.read_exact(&mut data_buf) {
+            Ok(()) => (),
+            Err(e) => {
+                println!("error: {}", e);
+                return;
+            }
+        }
+
+        // print read data
+        println!("{:?}", String::from_utf8(data_buf).unwrap());
     }
-
-    // read len
-    let mut len_buf = [0; 4];
-    stream.read_exact(&mut len_buf).unwrap();
-
-    // convert to u32
-    let len = BigEndian::read_u32(&len_buf);
-    let len_usize = len as usize;
-
-    // read data
-    let mut data_buf = vec![0; len_usize];
-    stream.read_exact(&mut data_buf).unwrap();
-
-    println!("{:?}", String::from_utf8(data_buf).unwrap());
 }
