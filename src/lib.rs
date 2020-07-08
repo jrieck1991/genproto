@@ -2,24 +2,19 @@ use bincode;
 use serde::{Deserialize, Serialize};
 use byteorder::{BigEndian, ByteOrder};
 
-
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct PutData {
+pub struct Data {
     pub key: Vec<u8>,
-    pub value: Vec<u8>,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct GetData {
-    pub key: Vec<u8>,
+    pub value: Option<Vec<u8>>,
 }
 
 // form get request and serialize into bytes
 pub fn form_get(key: &str) -> Vec<u8> {
 
     // form struct
-    let data = GetData{
+    let data = Data{
         key: key.as_bytes().to_vec(),
+        value: None,
     };
 
     serialize(data)
@@ -29,14 +24,23 @@ pub fn form_get(key: &str) -> Vec<u8> {
 pub fn form_put(key: &str, value: &str) -> Vec<u8> {
 
     // form struct
-    let data = PutData{
+    let data = Data{
         key: key.as_bytes().to_vec(),
-        value: value.as_bytes().to_vec(),
+        value: Some(value.as_bytes().to_vec()),
     };
 
     serialize(data)
 }
 
+// parse serialized request and return struct
+pub fn parse_request(data: Vec<u8>) -> Data {
+
+    let de_data: Data = bincode::deserialize(&data).unwrap();
+
+    de_data
+}
+
+// protocol tag
 const TAG: &[u8; 1] = b"\x00";
 
 fn serialize<T: Serialize>(data: T) -> Vec<u8> {
