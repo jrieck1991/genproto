@@ -2,6 +2,8 @@ use byteorder::{BigEndian, ByteOrder};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 
+const TAG: &[u8; 1] = b"\x00";
+
 fn main() {
     let listener = TcpListener::bind("localhost:4444").unwrap();
 
@@ -23,7 +25,7 @@ fn handle(mut stream: TcpStream) {
         }
 
         // verify tag
-        if tag_buf[0] != b"\x00"[0] && tag_buf.len() != 1 {
+        if tag_buf[0] != TAG[0] && tag_buf.len() != 1 {
             println!("unknown tag");
             return;
         }
