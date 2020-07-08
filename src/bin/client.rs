@@ -2,11 +2,11 @@ use byteorder::{BigEndian, ByteOrder};
 use std::io::prelude::*;
 use std::net::TcpStream;
 
-fn main() {
-    let mut stream = TcpStream::connect("localhost:4444").unwrap();
+const TAG: &[u8; 1] = b"\x00";
 
-    // write tag
-    stream.write(b"\x00").unwrap();
+fn main() {
+    // connect to server
+    let mut stream = TcpStream::connect("localhost:4444").unwrap();
 
     // generate some data
     let data = String::from("hello world");
@@ -19,8 +19,13 @@ fn main() {
 
     // serialize len
     BigEndian::write_u32(&mut len_buf, len_u32);
-    stream.write(&len_buf).unwrap();
 
-    // write data
-    stream.write(&data_bytes).unwrap();
+    // form payload
+    let mut payload: Vec<u8> = Vec::new();
+    payload.extend_from_slice(TAG);
+    payload.extend_from_slice(&len_buf);
+    payload.extend_from_slice(&data_bytes);
+
+    // write to stream
+    stream.write(&payload).unwrap();
 }
