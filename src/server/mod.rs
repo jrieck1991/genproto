@@ -1,5 +1,5 @@
-use byteorder::{BigEndian, ByteOrder};
 use bincode;
+use byteorder::{BigEndian, ByteOrder};
 use serde::{Deserialize, Serialize};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
@@ -18,7 +18,7 @@ impl Server {
         }
     }
 
-    pub fn start(&self) {
+    pub fn start(self: &mut Self) {
         let listener = TcpListener::bind(&self.addr).unwrap();
 
         for stream in listener.incoming() {
@@ -29,7 +29,84 @@ impl Server {
                     continue;
                 }
             };
-            handle(stream);
+            self.handle(stream);
+        }
+    }
+
+    fn handle(self: &mut Self, mut stream: TcpStream) {
+        loop {
+            // read tag
+            let mut tag_buf = [0; 1];
+            match stream.read_exact(&mut tag_buf) {
+                Ok(()) => (),
+                Err(e) => {
+                    println!("error: {}", e);
+                    return;
+                }
+            }
+
+            // verify tag
+            if tag_buf[0] != TAG[0] && tag_buf.len() != 1 {
+                println!("unknown tag");
+                return;
+            }
+
+            // read len
+            let mut len_buf = [0; 4];
+            match stream.read_exact(&mut len_buf) {
+                Ok(()) => (),
+                Err(e) => {
+                    println!("error: {}", e);
+                    return;
+                }
+            }
+
+            // convert to u32
+            let len = BigEndian::read_u32(&len_buf);
+            let len_usize = len as usize;
+
+            // read data
+            let mut data_buf = vec![0; len_usize];
+            match stream.read_exact(&mut data_buf) {
+                Ok(()) => (),
+                Err(e) => {
+                    println!("error: {}", e);
+                    return;
+                }
+            }
+
+            // deserialize bytes into struct
+            let data = parse_request(data_buf);
+
+            // action on request
+            self.action(data);
+        }
+    }
+
+    // action on data received
+    fn action(self: &mut Self, data: Data) {
+        match data.value {
+            Some(value) => {
+                println!("put received");
+
+                self.store.set(
+                    String::from_utf8(data.key).unwrap(),
+                    String::from_utf8(value).unwrap(),
+                );
+            }
+            None => {
+                println!("get received");
+
+                let value = match self.store.get(String::from_utf8(data.key).unwrap()) {
+                    Some(value) => value,
+                    None => {
+                        println!("no match found");
+                        return;
+                    }
+                };
+
+                println!("match found, value: {}", value);
+            }
         }
     }
 }
@@ -37,97 +114,10 @@ impl Server {
 // protocol tag
 const TAG: &[u8; 1] = b"\x00";
 
-fn handle(mut stream: TcpStream) {
-    loop {
-        // read tag
-        let mut tag_buf = [0; 1];
-        match stream.read_exact(&mut tag_buf) {
-            Ok(()) => (),
-            Err(e) => {
-                println!("error: {}", e);
-                return;
-            }
-        }
-
-        // verify tag
-        if tag_buf[0] != TAG[0] && tag_buf.len() != 1 {
-            println!("unknown tag");
-            return;
-        }
-
-        // read len
-        let mut len_buf = [0; 4];
-        match stream.read_exact(&mut len_buf) {
-            Ok(()) => (),
-            Err(e) => {
-                println!("error: {}", e);
-                return;
-            }
-        }
-
-        // convert to u32
-        let len = BigEndian::read_u32(&len_buf);
-        let len_usize = len as usize;
-
-        // read data
-        let mut data_buf = vec![0; len_usize];
-        match stream.read_exact(&mut data_buf) {
-            Ok(()) => (),
-            Err(e) => {
-                println!("error: {}", e);
-                return;
-            }
-        }
-
-        // deserialize bytes into struct
-        let data = parse_request(data_buf);
-
-        // action on request
-        action(data);
-    }
-}
-
-// action on data received
-fn action(data: Data) {
-    match data.value {
-        Some(_val) => {
-            // put
-            println!("put received");
-        }
-        None => {
-            // get
-            println!("get received");
-        }
-    }
-}
-
-
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Data {
     pub key: Vec<u8>,
     pub value: Option<Vec<u8>>,
-}
-
-// form get request and serialize into bytes
-pub fn form_get(key: &str) -> Vec<u8> {
-    // form struct
-    let data = Data {
-        key: key.as_bytes().to_vec(),
-        value: None,
-    };
-
-    serialize(data)
-}
-
-// form put request and serialize into bytes
-pub fn form_put(key: &str, value: &str) -> Vec<u8> {
-    // form struct
-    let data = Data {
-        key: key.as_bytes().to_vec(),
-        value: Some(value.as_bytes().to_vec()),
-    };
-
-    serialize(data)
 }
 
 // parse serialized request and return struct

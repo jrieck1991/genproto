@@ -1,4 +1,3 @@
-use genproto::{form_get, form_put};
 use std::io::prelude::*;
 use std::net::TcpStream;
 
@@ -28,4 +27,26 @@ fn put(key: &str, value: &str) {
 
     // write payload
     stream.write(&put_data).unwrap();
+}
+
+// form get request and serialize into bytes
+pub fn form_get(key: &str) -> Vec<u8> {
+    // form struct
+    let data = Data {
+        key: key.as_bytes().to_vec(),
+        value: None,
+    };
+
+    serialize(data)
+}
+
+// form put request and serialize into bytes
+pub fn form_put(key: &str, value: &str) -> Vec<u8> {
+    // form struct
+    let data = Data {
+        key: key.as_bytes().to_vec(),
+        value: Some(value.as_bytes().to_vec()),
+    };
+
+    serialize(data)
 }
