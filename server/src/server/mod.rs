@@ -34,7 +34,7 @@ impl Server {
             // read request from stream
             let request = match lib::read_stream(&mut stream) {
                 Some(request) => request,
-                None => continue,
+                None => return,
             };
 
             // action on request
