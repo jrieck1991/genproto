@@ -21,12 +21,11 @@ pub struct Request {
 
 // parse serialized request and return request
 fn parse_request(data: Vec<u8>) -> Option<Request> {
-
     let request: Request = match bincode::deserialize(&data) {
         Ok(request) => request,
         Err(e) => {
             println!("parse_request error: {}", e);
-            return None
+            return None;
         }
     };
 
@@ -57,7 +56,6 @@ fn serialize<T: Serialize>(data: T) -> Vec<u8> {
 
 // read from the tcp stream and parse a request
 pub fn read_stream(stream: &mut TcpStream) -> Option<Request> {
-
     // read tag
     let mut tag_buf = [0; 1];
     match stream.read_exact(&mut tag_buf) {
@@ -107,7 +105,6 @@ pub fn read_stream(stream: &mut TcpStream) -> Option<Request> {
 
 // write to a tcp stream with a request
 pub fn write_stream(stream: &mut TcpStream, req: Request) {
-    
     // serialize request into bytes
     let payload = serialize(req);
 
