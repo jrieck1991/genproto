@@ -12,7 +12,7 @@ impl Client {
     }
 
     // return value from store
-    pub fn get(&self, key: &str) -> String {
+    pub fn get(&self, key: &str) -> Option<String> {
         // form get request
         let req = lib::Request {
             action: String::from("get"),
@@ -26,9 +26,24 @@ impl Client {
         let mut stream = TcpStream::connect(&self.addr).unwrap();
 
         // write request
-        lib::write_stream(&mut stream, req);
+        lib::write_request(&mut stream, req);
 
-        String::from("hi")
+        // wait for response
+        let res = match lib::read_response(&mut stream) {
+            Some(res) => res,
+            None => return None,
+        };
+
+        // check for value in response
+        let value = match res.data.value {
+            Some(value) => value,
+            None => return None,
+        };
+
+        // convert to string
+        let parsed_value = String::from_utf8(value).unwrap();
+
+        Some(parsed_value)
     }
 
     // put pair into store
