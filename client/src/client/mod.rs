@@ -47,5 +47,5 @@ impl Client {
     }
 
     // put pair into store
-    pub fn put(&self, key: &str, value: &str) {}
+    pub fn put(&self, _key: &str, _value: &str) {}
 }

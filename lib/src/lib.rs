@@ -73,7 +73,6 @@ fn serialize<T: Serialize>(data: T) -> Vec<u8> {
 }
 
 pub fn read_request(stream: &mut TcpStream) -> Option<Request> {
-
     // read bytes into a buffer from the tcp stream
     let buf = match read_stream(stream) {
         Some(buf) => buf,
@@ -88,7 +87,6 @@ pub fn read_request(stream: &mut TcpStream) -> Option<Request> {
 }
 
 pub fn read_response(stream: &mut TcpStream) -> Option<Response> {
-
     // read bytes into a buffer from the tcp stream
     let buf = match read_stream(stream) {
         Some(buf) => buf,

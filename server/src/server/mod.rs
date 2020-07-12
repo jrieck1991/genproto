@@ -49,10 +49,9 @@ impl Server {
 
     // action on request
     fn action(self: &mut Self, req: lib::Request) -> lib::Response {
-
         // init response
-        let mut response = lib::Response{
-            data: lib::Data{
+        let mut response = lib::Response {
+            data: lib::Data {
                 key: req.data.key.clone(),
                 value: None,
             },
@@ -66,7 +65,7 @@ impl Server {
                 println!("put received");
 
                 // get value from data struct
-                let value = match req.data.value {
+                let _value = match req.data.value {
                     Some(value) => {
                         // put data in storage
                         self.store.set(
@@ -76,21 +75,19 @@ impl Server {
                     }
                     None => println!("put requires value field set"),
                 };
-
             }
             "get" => {
                 println!("get received");
 
                 // get key and return value if found
-                let value = match self.store.get(String::from_utf8(req.data.key).unwrap()) {
+                let _value = match self.store.get(String::from_utf8(req.data.key).unwrap()) {
                     Some(value) => {
                         response.data.value = Some(value.as_bytes().to_vec());
-                    },
+                    }
                     None => {
                         println!("no match found");
-                    },
+                    }
                 };
-
             }
             _ => {
                 println!("{} didn't match any actions", action);
