@@ -73,8 +73,8 @@ impl Server {
                     Some(value) => {
                         // put data in storage
                         self.store.put(
-                            String::from_utf8(req.data.key).unwrap(),
-                            String::from_utf8(value).unwrap(),
+                            &String::from_utf8(req.data.key).unwrap(),
+                            &String::from_utf8(value).unwrap(),
                         );
                     }
                     None => {
@@ -86,8 +86,18 @@ impl Server {
             "get" => {
                 println!("get received");
 
+                // convert key from bytes to string
+                let key = match String::from_utf8(req.data.key) {
+                    Ok(key) => key,
+                    Err(e) => {
+                        response.code = lib::ResponseCode::BadRequest;
+                        println!("conversion error: {}", e);
+                        return response;
+                    }
+                };
+
                 // get key and return value if found
-                match self.store.get(String::from_utf8(req.data.key).unwrap()) {
+                match self.store.get(&key) {
                     Some(value) => {
                         response.data.value = Some(value.as_bytes().to_vec());
                         println!("match");
@@ -95,6 +105,28 @@ impl Server {
                     None => {
                         response.code = lib::ResponseCode::NotFound;
                         println!("no match");
+                    }
+                };
+            }
+            "delete" => {
+                println!("delete received");
+
+                // convert key from bytes to string
+                let key = match String::from_utf8(req.data.key) {
+                    Ok(key) => key,
+                    Err(e) => {
+                        response.code = lib::ResponseCode::BadRequest;
+                        println!("conversion error: {}", e);
+                        return response;
+                    }
+                };
+
+                // delete key from store
+                match self.store.delete(&key) {
+                    Some(_deleted_value) => (),
+                    None => {
+                        response.code = lib::ResponseCode::NotFound;
+                        println!("delete not found for key: {}", key)
                     }
                 };
             }

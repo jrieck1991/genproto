@@ -107,4 +107,39 @@ impl Client {
 
         return res.code;
     }
+
+    // delete item matching key from store
+    pub fn delete(&self, key: &str) -> lib::ResponseCode {
+        // form delete request
+        let req = lib::Request {
+            action: String::from("delete"),
+            data: lib::Data {
+                key: key.as_bytes().to_vec(),
+                value: None,
+            },
+        };
+
+        // connect to store
+        let mut stream = match TcpStream::connect(&self.addr) {
+            Ok(stream) => stream,
+            Err(e) => {
+                println!("connection error: {}", e);
+                return lib::ResponseCode::NoResponse;
+            }
+        };
+
+        // write request
+        lib::write_request(&mut stream, req);
+
+        // wait for response
+        let res = match lib::read_response(&mut stream) {
+            Some(res) => res,
+            None => {
+                println!("no response");
+                return lib::ResponseCode::NoResponse;
+            }
+        };
+
+        return res.code;
+    }
 }
