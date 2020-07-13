@@ -1,8 +1,8 @@
 use bincode;
 use byteorder::{BigEndian, ByteOrder};
 use serde::{Deserialize, Serialize};
-use std::io::prelude::*;
-use std::net::TcpStream;
+use tokio::net::TcpStream;
+use tokio::prelude::*;
 
 // protocol tag
 const TAG: &[u8; 1] = b"\x00";
@@ -34,6 +34,65 @@ pub enum ResponseCode {
     NoResponse,
 }
 
+pub async fn read_request(stream: &mut TcpStream) -> Option<Request> {
+    // read bytes into a buffer from the tcp stream
+    let buf = match read_stream(stream) {
+        Some(buf) => buf,
+        None => return None,
+    };
+
+    // deserialize bytes into request
+    match parse_request(buf) {
+        Some(request) => Some(request),
+        None => None,
+    }
+}
+
+pub async fn read_response(stream: &mut TcpStream) -> Option<Response> {
+    // read bytes into a buffer from the tcp stream
+    let buf = match read_stream(stream) {
+        Some(buf) => buf,
+        None => return None,
+    };
+
+    // deserialize bytes into request
+    match parse_response(buf) {
+        Some(res) => Some(res),
+        None => None,
+    }
+}
+
+// write to a tcp stream with a request
+pub async fn write_request(stream: &mut TcpStream, req: Request) {
+    // serialize request into bytes
+    let payload = serialize(req);
+
+    // write to tcp stream
+    match stream.write(&payload).await {
+        Ok(n) => {
+            println!("{} bytes written", n);
+        }
+        Err(e) => {
+            println!("write_stream error: {}", e);
+        }
+    }
+}
+
+// write to a tcp stream with a request
+pub async fn write_response(stream: &mut TcpStream, res: Response) {
+    // serialize request into bytes
+    let payload = serialize(res);
+
+    // write to tcp stream
+    match stream.write(&payload).await {
+        Ok(n) => {
+            println!("{} bytes written", n);
+        }
+        Err(e) => {
+            println!("write_stream error: {}", e);
+        }
+    }
+}
 // parse serialized request and return
 fn parse_request(data: Vec<u8>) -> Option<Request> {
     let request: Request = match bincode::deserialize(&data) {
@@ -82,40 +141,12 @@ fn serialize<T: Serialize>(data: T) -> Vec<u8> {
     payload
 }
 
-pub fn read_request(stream: &mut TcpStream) -> Option<Request> {
-    // read bytes into a buffer from the tcp stream
-    let buf = match read_stream(stream) {
-        Some(buf) => buf,
-        None => return None,
-    };
-
-    // deserialize bytes into request
-    match parse_request(buf) {
-        Some(request) => Some(request),
-        None => None,
-    }
-}
-
-pub fn read_response(stream: &mut TcpStream) -> Option<Response> {
-    // read bytes into a buffer from the tcp stream
-    let buf = match read_stream(stream) {
-        Some(buf) => buf,
-        None => return None,
-    };
-
-    // deserialize bytes into request
-    match parse_response(buf) {
-        Some(res) => Some(res),
-        None => None,
-    }
-}
-
 // read from the tcp stream and parse a request
-fn read_stream(stream: &mut TcpStream) -> Option<Vec<u8>> {
+async fn read_stream(stream: &mut TcpStream) -> Option<Vec<u8>> {
     // read tag
     let mut tag_buf = [0; 1];
-    match stream.read_exact(&mut tag_buf) {
-        Ok(()) => (),
+    match stream.read_exact(&mut tag_buf).await {
+        Ok(_) => (),
         Err(e) => {
             println!("error: {}", e);
             return None;
@@ -126,12 +157,12 @@ fn read_stream(stream: &mut TcpStream) -> Option<Vec<u8>> {
     if tag_buf[0] != TAG[0] && tag_buf.len() != 1 {
         println!("unknown tag");
         return None;
-    }
+    };
 
     // read len
     let mut len_buf = [0; 4];
-    match stream.read_exact(&mut len_buf) {
-        Ok(()) => (),
+    match stream.read_exact(&mut len_buf).await {
+        Ok(_) => (),
         Err(e) => {
             println!("error: {}", e);
             return None;
@@ -144,45 +175,11 @@ fn read_stream(stream: &mut TcpStream) -> Option<Vec<u8>> {
 
     // read data
     let mut data_buf = vec![0; len_usize];
-    match stream.read_exact(&mut data_buf) {
-        Ok(data_buf) => data_buf,
+    match stream.read_exact(&mut data_buf).await {
+        Ok(_) => Some(data_buf),
         Err(e) => {
             println!("error: {}", e);
             return None;
-        }
-    };
-
-    Some(data_buf)
-}
-
-// write to a tcp stream with a request
-pub fn write_request(stream: &mut TcpStream, req: Request) {
-    // serialize request into bytes
-    let payload = serialize(req);
-
-    // write to tcp stream
-    match stream.write(&payload) {
-        Ok(n) => {
-            println!("{} bytes written", n);
-        }
-        Err(e) => {
-            println!("write_stream error: {}", e);
-        }
-    }
-}
-
-// write to a tcp stream with a request
-pub fn write_response(stream: &mut TcpStream, res: Response) {
-    // serialize request into bytes
-    let payload = serialize(res);
-
-    // write to tcp stream
-    match stream.write(&payload) {
-        Ok(n) => {
-            println!("{} bytes written", n);
-        }
-        Err(e) => {
-            println!("write_stream error: {}", e);
         }
     }
 }

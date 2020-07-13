@@ -5,7 +5,6 @@ A generic protocol for data transmission
 ## TODO
 
 * TLS
-* concurrent connections
 * logging
 * batch requests
 * clustering
