@@ -23,8 +23,8 @@ impl Storage {
         }
     }
 
-    // set will insert key:value pair into map, returns previous value for key
-    pub fn set(self: &mut Self, key: String, value: String) -> Option<String> {
+    // put will insert key:value pair into map, returns previous value for key
+    pub fn put(self: &mut Self, key: String, value: String) -> Option<String> {
         match self.map.insert(key, value) {
             None => None,
             Some(prev_value) => Some(String::from(prev_value)),
