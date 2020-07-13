@@ -31,13 +31,19 @@ impl Client {
         // wait for response
         let res = match lib::read_response(&mut stream) {
             Some(res) => res,
-            None => return None,
+            None => {
+                println!("no response");
+                return None
+            }
         };
 
         // check for value in response
         let value = match res.data.value {
             Some(value) => value,
-            None => return None,
+            None => {
+                println!("no value in response");
+                return None
+            }
         };
 
         // convert to string
@@ -47,5 +53,21 @@ impl Client {
     }
 
     // put pair into store
-    pub fn put(&self, _key: &str, _value: &str) {}
+    pub fn put(&self, key: &str, value: &str) {
+
+        // form put request
+        let req = lib::Request {
+            action: String::from("put"),
+            data: lib::Data {
+                key: key.as_bytes().to_vec(),
+                value: Some(value.as_bytes().to_vec()),
+            },
+        };
+
+        // connect to store
+        let mut stream = TcpStream::connect(&self.addr).unwrap();
+
+        // write request
+        lib::write_request(&mut stream, req);
+    }
 }

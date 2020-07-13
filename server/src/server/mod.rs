@@ -43,7 +43,9 @@ impl Server {
             };
 
             // action on request
-            self.action(request);
+            let res = self.action(request);
+
+            lib::write_response(&mut stream, res);
         }
     }
 
@@ -65,7 +67,7 @@ impl Server {
                 println!("put received");
 
                 // get value from data struct
-                let _value = match req.data.value {
+                match req.data.value {
                     Some(value) => {
                         // put data in storage
                         self.store.set(
@@ -80,12 +82,13 @@ impl Server {
                 println!("get received");
 
                 // get key and return value if found
-                let _value = match self.store.get(String::from_utf8(req.data.key).unwrap()) {
+                match self.store.get(String::from_utf8(req.data.key).unwrap()) {
                     Some(value) => {
                         response.data.value = Some(value.as_bytes().to_vec());
+                        println!("match");
                     }
                     None => {
-                        println!("no match found");
+                        println!("no match");
                     }
                 };
             }

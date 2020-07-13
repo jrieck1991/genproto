@@ -5,7 +5,7 @@ fn main() {
 
     c.put("test-key", "test-value");
 
-    //let value = c.get("test-key");
+    let value = c.get("test-key");
 
-    //println!("value: {:?}", value);
+    println!("value: {:#?}", value);
 }
