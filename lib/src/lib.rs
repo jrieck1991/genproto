@@ -141,7 +141,6 @@ fn serialize<T: Serialize>(data: T) -> Vec<u8> {
     payload
 }
 
-
 // read from the tcp stream and parse a request
 async fn read_stream(stream: &mut TcpStream) -> Option<Vec<u8>> {
     // read tag
@@ -181,6 +180,6 @@ async fn read_stream(stream: &mut TcpStream) -> Option<Vec<u8>> {
         Err(e) => {
             println!("error: {}", e);
             return None;
-        },
+        }
     }
 }

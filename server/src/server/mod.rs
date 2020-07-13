@@ -18,18 +18,16 @@ impl Server {
 
     // start listening for incoming connections
     pub async fn start(self: &mut Self) {
-
         // bind to addr
         let mut listener = match TcpListener::bind(&self.addr).await {
             Ok(listener) => listener,
             Err(e) => {
                 println!("bind err: {}", e);
-                return
+                return;
             }
         };
 
         let server = async move {
-
             // listen for incoming connections
             let mut incoming = listener.incoming();
             while let Some(stream_res) = incoming.next().await {
@@ -38,7 +36,7 @@ impl Server {
                     Ok(stream) => self.handle(stream.into()),
                     Err(e) => {
                         println!("accept err: {}", e);
-                        return
+                        return;
                     }
                 }
             }
