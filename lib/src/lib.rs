@@ -22,6 +22,16 @@ pub struct Request {
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Response {
     pub data: Data,
+    pub code: ResponseCode,
+}
+
+// possible response codes returned
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub enum ResponseCode {
+    Ok,
+    BadRequest,
+    NotFound,
+    NoResponse,
 }
 
 // parse serialized request and return

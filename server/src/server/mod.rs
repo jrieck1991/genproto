@@ -45,6 +45,7 @@ impl Server {
             // action on request
             let res = self.action(request);
 
+            // write response back to client
             lib::write_response(&mut stream, res);
         }
     }
@@ -57,6 +58,7 @@ impl Server {
                 key: req.data.key.clone(),
                 value: None,
             },
+            code: lib::ResponseCode::Ok,
         };
 
         // convert action to str for matching
@@ -70,12 +72,15 @@ impl Server {
                 match req.data.value {
                     Some(value) => {
                         // put data in storage
-                        self.store.set(
+                        self.store.put(
                             String::from_utf8(req.data.key).unwrap(),
                             String::from_utf8(value).unwrap(),
                         );
                     }
-                    None => println!("put requires value field set"),
+                    None => {
+                        response.code = lib::ResponseCode::BadRequest;
+                        println!("put requires value field set");
+                    }
                 };
             }
             "get" => {
@@ -88,6 +93,7 @@ impl Server {
                         println!("match");
                     }
                     None => {
+                        response.code = lib::ResponseCode::NotFound;
                         println!("no match");
                     }
                 };
