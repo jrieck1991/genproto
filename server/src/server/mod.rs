@@ -92,7 +92,7 @@ impl Server {
                     Err(e) => {
                         response.code = lib::ResponseCode::BadRequest;
                         println!("conversion error: {}", e);
-                        return response
+                        return response;
                     }
                 };
 
@@ -117,17 +117,17 @@ impl Server {
                     Err(e) => {
                         response.code = lib::ResponseCode::BadRequest;
                         println!("conversion error: {}", e);
-                        return response
+                        return response;
                     }
                 };
 
                 // delete key from store
                 match self.store.delete(&key) {
-                    Some(deleted_value) => (),
+                    Some(_deleted_value) => (),
                     None => {
                         response.code = lib::ResponseCode::NotFound;
                         println!("delete not found for key: {}", key)
-                    },
+                    }
                 };
             }
             _ => {
