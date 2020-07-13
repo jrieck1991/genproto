@@ -1,4 +1,6 @@
-use std::net::{TcpListener, TcpStream};
+use tokio::net::{TcpListener, TcpStream};
+use tokio::prelude::*;
+use tokio::stream::StreamExt;
 mod store;
 
 pub struct Server {
@@ -15,22 +17,35 @@ impl Server {
     }
 
     // start listening for incoming connections
-    pub fn start(self: &mut Self) {
-        let listener = TcpListener::bind(&self.addr).unwrap();
+    pub async fn start(self: &mut Self) {
 
-        // listen for incoming tcp conns
-        for stream in listener.incoming() {
-            let stream = match stream {
-                Ok(stream) => stream,
-                Err(e) => {
-                    println!("connection error: {}", e);
-                    continue;
+        // bind to addr
+        let mut listener = match TcpListener::bind(&self.addr).await {
+            Ok(listener) => listener,
+            Err(e) => {
+                println!("bind err: {}", e);
+                return
+            }
+        };
+
+        let server = async move {
+
+            // listen for incoming connections
+            let mut incoming = listener.incoming();
+            while let Some(stream_res) = incoming.next().await {
+                // handle tcp streams
+                match stream_res {
+                    Ok(stream) => self.handle(stream.into()),
+                    Err(e) => {
+                        println!("accept err: {}", e);
+                        return
+                    }
                 }
-            };
+            }
+        };
 
-            // handle stream
-            self.handle(stream);
-        }
+        // start server and block
+        server.await;
     }
 
     // handle tcp stream lifetime
