@@ -6,12 +6,14 @@ A generic protocol for data transmission
 
 * TLS
 * concurrent connections
+* logging
+* batch requests
+* clustering
 
 ### Cleanup
 
 * lib write/read code
 * server response checking
 * error type
-* logging
 * bytes conversion to vector
 * dont convert to string for stuff
